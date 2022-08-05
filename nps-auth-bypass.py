@@ -20,10 +20,10 @@ requests.packages.urllib3.disable_warnings(requests.packages.urllib3.exceptions.
 
 
 def proxy():
-    # proxy = None
-    proxy = {
-        'http': 'http://127.0.0.1:8080',
-        'https': 'http://127.0.0.1:8080',}
+    proxy = None
+    # proxy = {
+    #     'http': 'http://127.0.0.1:8080',
+    #     'https': 'http://127.0.0.1:8080',}
     return proxy
 
 def gen_authkey(time=int(time.time())):
